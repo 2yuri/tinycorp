@@ -1,0 +1,16 @@
+# Line endings are LF in the repository and LF in every checkout, on every platform. Without this
+# a Windows checkout gets CRLF from `core.autocrlf`, and the suite — which reads this repo's own
+# files, and makes git repos of its own and reads them back — starts failing on the line endings
+# rather than on anything it is about (T166).
+* text=auto eol=lf
+
+# Pen exports the design; nothing here is written by hand. Marking it generated keeps GitHub's
+# language bar on the code we write and keeps these files out of pull request diffs.
+design/html/** linguist-generated=true
+design/screens/** linguist-generated=true
+design/system/** linguist-generated=true
+design/office/** linguist-generated=true
+docs/design-audit/** linguist-generated=true
+
+# Captures and art are binary; never try to merge them.
+*.png binary

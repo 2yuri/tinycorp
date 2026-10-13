@@ -1,0 +1,201 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": {
+    // Everything but what Pen exports and what the audit writes: nothing in there is written by
+    // hand, and `.gitattributes` already marks it generated.
+    "includes": [
+      "**",
+      "!design/html",
+      "!design/screens",
+      "!design/system",
+      "!design/office",
+      "!docs/design-audit",
+      "!src/renderer/public",
+      "!resources"
+    ]
+  },
+  // The style the repo already wrote, said out loud so an outside PR arrives in it.
+  "formatter": { "enabled": true, "indentStyle": "space", "indentWidth": 2, "lineWidth": 120 },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "jsxQuoteStyle": "double",
+      "semicolons": "asNeeded",
+      "trailingCommas": "all",
+      "arrowParentheses": "always"
+    }
+  },
+  "css": {
+    "formatter": { "quoteStyle": "single" },
+    // `@theme`, `@source` and `source(none)` are Tailwind v4's own at-rules; without this the
+    // parser stops at the first one and the whole file goes unformatted and unlinted (T206).
+    "parser": { "tailwindDirectives": true }
+  },
+  "json": { "formatter": { "lineWidth": 120 }, "parser": { "allowComments": true } },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "complexity": {
+        // TypeScript's `noPropertyAccessFromIndexSignature` asks for exactly the opposite: a key
+        // that comes from an index signature is written `env['PATH']`, so the compiler can tell a
+        // declared property from a guess. The compiler wins.
+        "useLiteralKeys": "off"
+      },
+      "style": {
+        // A warning, not an error: 2300-odd of them, most in tests where the value is known to be
+        // there. In production code each one wants a one-line reason instead (T183, T184).
+        "noNonNullAssertion": "warn",
+        "useImportType": "error",
+        // AGENTS.md has been saying both of these in prose. This is the part a machine can check:
+        // where a module may be imported, not how it is used once it is.
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": {
+              "electron": "Electron exists in the main and preload processes only; the renderer goes through the IPC contract in src/shared.",
+              "child_process": "Child processes belong to the main process; resolve the CLI through src/main/engine/cli-command.ts first.",
+              "node:child_process": "Child processes belong to the main process; resolve the CLI through src/main/engine/cli-command.ts first."
+            }
+          }
+        }
+      },
+      "suspicious": {
+        "noExplicitAny": "error",
+        "noImportCycles": "error",
+        // Off for good, not pending a ticket: the control characters are the point. `stripAnsi`
+        // matches `\x1b[`, and the attachment and Codex escapers match the C0 range on purpose.
+        "noControlCharactersInRegex": "off",
+        // Off for good, and this is the reason rather than a ticket to read it in (T190).
+        //
+        // The rule catches one bug: a row keyed by its position keeps the state of whoever stood
+        // there before, so inserting, filtering or reordering a list moves a half-typed field onto
+        // the wrong row. All 32 sites in this repo are the other kind, and were read one at a time
+        // twice — once in T183 and again in T190. In every one of them the index *is* the identity:
+        // the words of a sentence, the segments of a message, the blocks of a markdown file, the
+        // lines of a source file (where the index is the line number), the cells of a table,
+        // `Array.from({ length: N })` over the character sheets, the two gaps in a pagination row.
+        // None of them is ever reordered or filtered — each is rebuilt whole from its text — and
+        // none holds a control whose state could migrate, because every list in this repo that
+        // carries an input is keyed by that input's own id.
+        //
+        // Turning the rule on would therefore mean 24 `biome-ignore` lines saying the same sentence
+        // 24 times, which buys a warning on a 33rd site at the cost of hiding the reason. A list
+        // that really is reordered belongs on a key of its own, and a review is where that is
+        // caught.
+        "noArrayIndexKey": "off"
+      }
+    }
+  },
+  "overrides": [
+    {
+      // Every renderer source, since T216: there is no BEM left for the rule to sort pointlessly.
+      // The list stays spelled out rather than becoming `src/renderer/**`, because the capture
+      // harnesses and the routers under it write no class at all and a glob that covers them says
+      // less about what is styled than this does.
+      "includes": [
+        "src/renderer/src/ui/kit/*.tsx",
+        "src/renderer/src/settings/*.tsx",
+        "src/renderer/src/settings/settings-classes.ts",
+        "src/renderer/src/company-move/CompanyMove.tsx",
+        "src/renderer/src/routing/RoutingChip.tsx",
+        "src/renderer/src/updates/UpdateNotice.tsx",
+        "src/renderer/src/updates/VersionRow.tsx",
+        "src/renderer/src/budget/OutOfBudget.tsx",
+        "src/renderer/src/company-removal/CompanyRemoval.tsx",
+        "src/renderer/src/ui/gallery/Gallery.tsx",
+        "src/renderer/src/launcher/*.tsx",
+        "src/renderer/src/preflight/*.tsx",
+        "src/renderer/src/onboarding/*.tsx",
+        "src/renderer/src/repositories/*.tsx",
+        "src/renderer/src/repositories/repo-classes.ts",
+        "src/renderer/src/code/TicketCode.tsx",
+        "src/renderer/src/restore/TicketRestorePoints.tsx",
+        "src/renderer/src/testing/TestEvidenceCard.tsx",
+        "src/renderer/src/testing/TestingParts.tsx",
+        "src/renderer/src/testing/TestingScreen.tsx",
+        "src/renderer/src/review/*.tsx",
+        "src/renderer/src/board/*.tsx",
+        "src/renderer/src/notifications/NotificationCheck.tsx",
+        "src/renderer/src/inbox/InboxPanel.tsx",
+        "src/renderer/src/chat/DeleteChannel.tsx",
+        "src/renderer/src/chat/ChannelPanels.tsx",
+        "src/renderer/src/chat/Chat.tsx",
+        "src/renderer/src/chat/Messages.tsx",
+        "src/renderer/src/chat/Composer.tsx",
+        "src/renderer/src/chat/composer-suggestions.tsx",
+        "src/renderer/src/chat/ChannelHeader.tsx",
+        "src/renderer/src/chat/Cards.tsx",
+        "src/renderer/src/chat/ApprovalCard.tsx",
+        "src/renderer/src/chat/PlanCard.tsx",
+        "src/renderer/src/chat/DigestCard.tsx",
+        "src/renderer/src/chat/Attachments.tsx",
+        "src/renderer/src/chat/ThreadPanel.tsx",
+        "src/renderer/src/chat/InboxList.tsx",
+        "src/renderer/src/activity/**",
+        "src/renderer/src/chrome/**",
+        "src/renderer/src/employees/**",
+        "src/renderer/src/hiring/**",
+        "src/renderer/src/model-picker/**",
+        "src/renderer/src/office/**",
+        "src/renderer/src/office-view/**",
+        "src/renderer/src/profile/**",
+        "src/renderer/src/shell/**",
+        "src/renderer/src/sprites/**",
+        "src/renderer/src/usage/**",
+        "src/renderer/src/files/*.tsx",
+        "src/renderer/src/employee-drawer/*.tsx",
+        "src/renderer/src/editors/OpenWith.tsx",
+        "src/renderer/src/paths/Written.tsx",
+        "src/renderer/src/terminal/*.tsx",
+        "src/renderer/src/markdown/*.tsx",
+        "src/renderer/src/memory/*.tsx"
+      ],
+      "linter": { "rules": { "nursery": { "useSortedClasses": "error" } } }
+    },
+    {
+      // The main process and the build scripts are where a child process is started, and the
+      // main process is one of the two that may hold `electron`.
+      "includes": ["src/main/**", "tools/**"],
+      "linter": { "rules": { "style": { "noRestrictedImports": { "level": "error", "options": { "paths": {} } } } } }
+    },
+    {
+      // Preload may hold `electron` — `contextBridge` lives there — but starts nothing.
+      "includes": ["src/preload/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "child_process": "Child processes belong to the main process; resolve the CLI through src/main/engine/cli-command.ts first.",
+                  "node:child_process": "Child processes belong to the main process; resolve the CLI through src/main/engine/cli-command.ts first."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      // `src/build` is electron-builder's configuration, run by Node: it spawns, it never renders.
+      "includes": ["src/build/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "electron": "Electron exists in the main and preload processes only; the renderer goes through the IPC contract in src/shared."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

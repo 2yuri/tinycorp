@@ -1,0 +1,8 @@
+allowBuilds:
+  electron: true
+  # Windows installers are not built here, so its build script is not needed to package for macOS.
+  electron-winstaller: false
+  esbuild: true
+  # lefthook installs the git hooks from lefthook.yml on install.
+  lefthook: true
+  node-pty: true

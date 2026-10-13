@@ -1,0 +1,115 @@
+TinyCorp
+Copyright 2026 The TinyCorp authors
+
+This product includes software developed by the TinyCorp authors, licensed under
+the Apache License, Version 2.0 (see LICENSE).
+
+--------------------------------------------------------------------------------
+
+Ideas borrowed, with thanks
+
+The Company memory — a git-backed markdown wiki with a derived index — follows the
+design of ai-memory by Fabio Akita, which is MIT licensed:
+
+    https://github.com/akitaonrails/ai-memory
+
+    MIT License
+    Copyright (c) Fabio Akita and the ai-memory contributors
+
+What was taken is the shape rather than the code: markdown as the source of truth,
+an index that is derived and can always be rebuilt from the files, capture with no
+LLM in it, aging, and claim-once handoffs. TinyCorp's implementation is its own and
+depends on nothing from that project — see docs/company-memory.md. The credit is
+here because the thinking was theirs first.
+
+An Employee's own notes — an append-only log with a fixed-size wake, assembled
+from summaries over aligned power-of-two ranges — follow the design of OptMem by
+Victor Taelin:
+
+    https://github.com/VictorTaelin/OptMem
+
+That repository carries no licence, so the idea is all that was taken: no code, no
+prompt text, and no file from it is in this one. What was taken is the shape — a
+log that is only ever appended to, a tree of summaries that is a rebuildable cache
+over it, and a session start that reads the whole history inside a budget that does
+not grow. TinyCorp's implementation is its own; see docs/company-memory.md. The
+credit is here because the thinking was theirs first.
+
+Lean builder — the Company add-on that has every Employee climb a ladder before it
+writes code, and stop at the first rung that holds — is ponytail's ladder, by
+Dietrich Gebert, which is MIT licensed:
+
+    https://github.com/DietrichGebert/ponytail
+
+    MIT License
+    Copyright (c) 2026 DietrichGebert
+
+What is in the app is our own wording of the seven rungs and the never-cut list, not
+a copy: src/shared/build-style.ts is the whole of it, and the card that offers it says
+"From ponytail · MIT" where the boss can read it. The verbatim ruleset is vendored
+separately, below, and only the benchmark reads that. The credit is here because the
+ladder was theirs first, and because the numbers the card shows — 28% fewer tokens,
+32% less cost, 29% fewer lines — are ponytail's ladder being measured, not ours.
+
+Caveman — the Company add-on that has every Employee answer the boss in few words —
+is caveman's idea, by Julius Brussee:
+
+    https://github.com/JuliusBrussee/caveman
+
+That project's licence is split: its skill instructions are MIT, and its engine and
+its proxy are BSL-1.1, which is not an open source licence. Nothing of either is
+here. No code, no prompt text and no file from it is in this repository, and neither
+the engine nor the proxy was read for it: what was taken is the idea, that an agent
+can answer the person reading in fragments while everything a machine or a record
+needs stays whole. TinyCorp's wording is its own — src/shared/caveman.ts is the whole
+of it, three intensities and what it never touches — and the card that offers it says
+"From caveman · MIT" where the boss can read it. The card shows no number, because at
+the time of writing nobody has measured it; tools/bench/boss.mjs is the arm that will.
+The credit is here because the idea was theirs first.
+
+--------------------------------------------------------------------------------
+
+Code vendored
+
+tools/bench/vendor/ponytail/SKILL.md is copied verbatim from ponytail, which is MIT
+licensed:
+
+    https://github.com/DietrichGebert/ponytail
+
+    MIT License
+    Copyright (c) 2026 DietrichGebert
+
+The full licence text is beside it at tools/bench/vendor/ponytail/LICENSE, and the
+file is not edited. It is there only so that one arm of `pnpm bench:tokens` measures
+the real ruleset rather than a paraphrase of it. Nothing in TinyCorp reads it, and
+the rigor of ponytail's own benchmarks — isolate the arms, publish the limitations,
+withdraw a number that turns out to have been contaminated — is what docs/bench-tokens.md
+is modelled on.
+
+--------------------------------------------------------------------------------
+
+Logos vendored
+
+The logos TinyCorp draws beside somebody else's product — a coding CLI an Employee
+runs on, a service an MCP preset connects to — are individual SVG files copied
+unmodified from two icon sets. Neither set is a dependency of this app: only the
+files that are really drawn are in the repo, in src/renderer/src/ui/logos/, with
+both licence texts beside them.
+
+LobeHub Icons, read at @lobehub/icons-static-svg 1.95.1, which is MIT licensed:
+
+    https://github.com/lobehub/lobe-icons
+
+    MIT License
+    Copyright (c) 2023 LobeHub
+
+Simple Icons, read at simple-icons 16.32.0, which is CC0 1.0 Universal:
+
+    https://github.com/simple-icons/simple-icons
+
+    CC0 1.0 Universal
+
+The marks themselves are the trademarks of their respective owners, and are used
+only to identify the service an integration connects to. Drawing one is not a
+claim of affiliation with, or endorsement by, its owner. docs/brand-logos.md is
+what that means in practice, and how a logo is taken back out.

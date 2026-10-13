@@ -1,0 +1,63 @@
+name: New Provider or forge
+description: A coding CLI TinyCorp should be able to hire, or a place pull requests live that it should be able to open one on.
+labels: ['enhancement', 'needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Both of these are meant to be a pull request rather than a request: a **Provider** is a
+        catalogue entry, a folder and one registry line, and a **forge** is the same shape. The
+        guides are written for someone who has never opened this repo:
+
+        - [`docs/providers.md`](https://github.com/2yuri/tinycorp/blob/main/docs/providers.md) —
+          and `pnpm provider:new <id>` writes the three files for you.
+        - [`docs/forges.md`](https://github.com/2yuri/tinycorp/blob/main/docs/forges.md)
+        - [`CONTRIBUTING.md`](https://github.com/2yuri/tinycorp/blob/main/CONTRIBUTING.md) says what
+          such a pull request must and must not include.
+
+        Open this issue anyway if you want one and are not going to write it, or if you started and
+        the conformance suite is holding you to something that looks wrong. Say which below.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Which is it
+      options:
+        - A Provider (a coding CLI an Employee runs on)
+        - A forge (where a repo's pull requests live)
+    validations:
+      required: true
+  - type: input
+    id: product
+    attributes:
+      label: The product, and its CLI
+      placeholder: 'Goose — `goose`'
+    validations:
+      required: true
+  - type: input
+    id: docs
+    attributes:
+      label: Where its docs are
+      description: The page that says how it is installed, how it is signed in to, and what it does headlessly.
+    validations:
+      required: true
+  - type: textarea
+    id: fit
+    attributes:
+      label: How it fits the contract
+      description: |
+        For a Provider: does it run on a subscription login rather than an API key, can a session be
+        resumed, can it be given an MCP server, and does it have hooks or any way to say what it is
+        doing? For a forge: is there a CLI that can open and read a pull request without TinyCorp
+        holding a token?
+    validations:
+      required: true
+  - type: dropdown
+    id: who
+    attributes:
+      label: Who writes it
+      options:
+        - I am writing the adapter
+        - I would like to, and I am asking a question first
+        - I am asking for it, not writing it
+    validations:
+      required: true

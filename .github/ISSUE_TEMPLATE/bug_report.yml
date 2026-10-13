@@ -1,0 +1,84 @@
+name: Bug report
+description: Something in TinyCorp does not work the way it says it does.
+labels: ['bug', 'needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. A bug in this app is usually a bug on **one** platform, with
+        **one** Provider, so the two dropdowns below are what make a report reproducible.
+
+        If this is a security problem — anything about the local MCP server, a Session token, an
+        Environment value or a secret store — close this and use
+        [private vulnerability reporting](https://github.com/2yuri/tinycorp/security/advisories/new)
+        instead. `SECURITY.md` says why.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: From a state we can get to ourselves. "Hire an Employee, give it a ticket in a repo with no remote, …"
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      description: Windows native and Windows with the Provider inside WSL are different answers (`docs/windows.md`).
+      options:
+        - macOS
+        - Windows
+        - WSL (a Provider installed inside a distro)
+        - Linux
+    validations:
+      required: true
+  - type: input
+    id: os-version
+    attributes:
+      label: Which version of it
+      description: 'macOS 15.3 · Windows 11 23H2 · Ubuntu 24.04 · Fedora 40 — and the distro for WSL.'
+    validations:
+      required: true
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Provider
+      description: The CLI the Employee was running on. Pick the last one if nothing was running.
+      options:
+        - Claude Code
+        - Codex
+        - OpenCode
+        - Another Provider (say which below)
+        - Not about a Provider
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: TinyCorp version
+      description: The foot of **Your profile** says which build this is. A `pnpm dev` from a clone is that commit's short SHA.
+      placeholder: 0.0.0 (or a commit SHA)
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs and what the screen said
+      description: |
+        The exact wording of any error, and the terminal TinyCorp was started from if you ran it
+        yourself. **Read what you paste**: a log can carry a repo path, a branch name or a ticket
+        title. Never paste a token or an Environment value — if a value of yours appears in a log,
+        that is the bug, and it goes through private vulnerability reporting instead.
+      render: text
+    validations:
+      required: true

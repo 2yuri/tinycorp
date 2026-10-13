@@ -1,0 +1,603 @@
+/*
+ * **The renderer's one stylesheet** (T216). Tailwind v4's utilities, this app's tokens, this app's
+ * reset, and nothing else: `find src/renderer -name '*.css'` lists this file and `tokens.css`, and
+ * `stylesheets.test.ts` fails if it ever lists a third.
+ *
+ * **No preflight.** `@import 'tailwindcss'` would bring it, and preflight restyles every element in
+ * the document rather than the subtree that asked for it: headings, lists, form controls, the lot.
+ * The `base` layer below is this app's reset and stays the only one, so only the utilities layer is
+ * imported here.
+ *
+ * **Sources, named.** `source(none)` turns off Tailwind's own file discovery — it would otherwise
+ * walk the whole repo, including `design/html`, which is 40 Pen exports — and every folder that
+ * draws something adds its own `@source` line below. A line may name a folder, which is how a
+ * folder migrated whole opts in without a line per component. `tailwind.test.ts` compiles every
+ * class each of those files writes.
+ *
+ * **The layer order.** `theme` is Tailwind's own, empty while every theme key is `inline`, but named
+ * anyway so a non-inline key lands under everything rather than on top of it; `base` is the
+ * document defaults; `utilities` is Tailwind's, last, so one class beats the reset under it without
+ * `!`. The `kit` and `screens` layers went with the sheets that were in them (T216): the kit styles
+ * itself in utilities now and `cx` settles what a screen adjusts, so there is nothing left for a
+ * layer to order.
+ *
+ * **`base` holds no class.** Every rule in it is about an element — `html`, `body`, a `button`'s
+ * inherited font — or is an at-rule that cannot be a class at all: a registered custom property is
+ * document-scoped by definition and a `@keyframes` name is global. A component's styling is
+ * utilities on the component and a shared reset is an exported class list, so neither is a rule
+ * here. `stylesheets.test.ts` fails on a class selector in this file.
+ *
+ * The faces this app is set in are not here either, and `ui/fonts.ts` says why: every component
+ * imports this sheet, and not every page that draws something draws text.
+ *
+ * `ui/tokens.css` is in no layer. It declares custom properties — the palette, the type scale, the
+ * elevations, and the Dark values every one of them takes under `[data-theme='dark']` — and no rule
+ * competes with it, so it stays out of the ordering question. It is the one file not folded in here:
+ * `@theme` is a flat block of keys with no way to say "and these under a theme attribute", and the
+ * theme below reads those tokens rather than replacing them.
+ */
+@layer theme, base, utilities;
+@import './tokens.css';
+@import 'tailwindcss/utilities.css' layer(utilities) source(none);
+/* The whole kit, and the page every component of it is drawn on at once (T215). The folder rather
+   than a line per component, because after T216 there is no component in it that is not here. */
+@source './kit';
+/* The vendored logos' one drawing: an `<img>`, the box it is in, and the dark theme's
+   inversion of a monochrome mark (T246). Nothing else in `logos/` writes a class. */
+@source './logos/Logo.tsx';
+@source './gallery/Gallery.tsx';
+@source '../settings/AddonsTab.tsx';
+@source '../launcher/Launcher.tsx';
+@source '../launcher/LauncherFrame.tsx';
+@source '../launcher/CreateCompanyView.tsx';
+@source '../preflight/PreflightScreen.tsx';
+@source '../preflight/PreflightCard.tsx';
+@source '../preflight/PreflightChooser.tsx';
+@source '../preflight/preflight-commands.tsx';
+@source '../onboarding/SetupWizard.tsx';
+@source '../onboarding/TeamStep.tsx';
+@source '../onboarding/RepositoriesStep.tsx';
+@source '../onboarding/FirstTicketStep.tsx';
+/* The folder's whole class vocabulary is in one module, so the screens that draw only from it —
+   Add repository, New repository, the initialise alert — need no line of their own. */
+@source '../repositories/repo-classes.ts';
+@source '../repositories/Repositories.tsx';
+@source '../repositories/RepoCard.tsx';
+@source '../repositories/RepoAbout.tsx';
+@source '../repositories/StackPanel.tsx';
+@source '../repositories/FoundRepos.tsx';
+@source '../repositories/FoundReposModal.tsx';
+@source '../repositories/ScanFolderModal.tsx';
+@source '../code/TicketCode.tsx';
+@source '../restore/TicketRestorePoints.tsx';
+@source '../testing/TestEvidenceCard.tsx';
+@source '../testing/TestingParts.tsx';
+@source '../testing/TestingScreen.tsx';
+@source '../review/ReviewButton.tsx';
+@source '../review/ReviewComments.tsx';
+@source '../review/ReviewParts.tsx';
+@source '../review/ReviewScreen.tsx';
+@source '../review/SecurityScopeSetting.tsx';
+@source '../review/ReviewThreads.tsx';
+@source '../review/TicketReview.tsx';
+@source '../board/Board.tsx';
+@source '../board/BoardChrome.tsx';
+@source '../board/DeleteTicket.tsx';
+@source '../board/Editor.tsx';
+@source '../board/EpicMark.tsx';
+@source '../board/NewTicketModal.tsx';
+@source '../board/RepoChips.tsx';
+@source '../board/TicketCard.tsx';
+@source '../board/TicketExtras.tsx';
+@source '../board/TicketLinks.tsx';
+@source '../board/TicketPlan.tsx';
+@source '../notifications/NotificationCheck.tsx';
+@source '../inbox/InboxPanel.tsx';
+@source '../chat/DeleteChannel.tsx';
+@source '../chat/ChannelPanels.tsx';
+@source '../chat/Chat.tsx';
+@source '../chat/Messages.tsx';
+@source '../chat/UrlLink.tsx';
+@source '../chat/Composer.tsx';
+@source '../chat/composer-suggestions.tsx';
+@source '../chat/ChannelHeader.tsx';
+@source '../chat/Cards.tsx';
+@source '../chat/ApprovalCard.tsx';
+@source '../chat/PlanCard.tsx';
+@source '../chat/DigestCard.tsx';
+@source '../chat/Attachments.tsx';
+@source '../chat/Lightbox.tsx';
+@source '../chat/MessageImages.tsx';
+@source '../chat/ThreadPanel.tsx';
+@source '../chat/InboxList.tsx';
+@source '../chat/ConversationPanel.tsx';
+@source '../settings/settings-classes.ts';
+@source '../settings/CompanySettings.tsx';
+@source '../settings/IntegrationsTab.tsx';
+@source '../settings/mcp-parts.tsx';
+@source '../settings/McpFound.tsx';
+@source '../settings/SkillsFound.tsx';
+@source '../settings/McpPresets.tsx';
+@source '../settings/TestingSetting.tsx';
+@source '../settings/OfficeTab.tsx';
+@source '../settings/UsageRoutingTab.tsx';
+@source '../settings/TokensTab.tsx';
+@source '../settings/RememberCard.tsx';
+@source '../settings/ColleagueVoiceCard.tsx';
+@source '../settings/CompressCard.tsx';
+@source '../settings/DailyDigestSetting.tsx';
+@source '../settings/EnvironmentsTab.tsx';
+@source '../company-move/CompanyMove.tsx';
+@source '../routing/RoutingChip.tsx';
+@source '../updates/UpdateNotice.tsx';
+@source '../updates/VersionRow.tsx';
+@source '../budget/OutOfBudget.tsx';
+@source '../company-removal/CompanyRemoval.tsx';
+/* T210f: ten folders migrated whole, each opted in by its folder rather than a line per file. */
+@source '../activity';
+@source '../chrome';
+@source '../employees';
+@source '../hiring';
+@source '../model-picker';
+@source '../office';
+@source '../office-view';
+@source '../profile';
+@source '../shell';
+@source '../sprites';
+@source '../usage';
+@source '../terminal/LiveTerminal.tsx';
+@source '../terminal/RtkChip.tsx';
+@source '../terminal/PtyScreen.tsx';
+@source '../sign-in';
+@source '../paths/Written.tsx';
+@source '../editors/OpenWith.tsx';
+@source '../markdown/MarkdownEditor.tsx';
+@source '../markdown/MarkdownToolbar.tsx';
+@source '../memory/MemoryActions.tsx';
+@source '../memory/MemoryEditor.tsx';
+@source '../memory/MemoryHowItFills.tsx';
+@source '../memory/MemoryList.tsx';
+@source '../memory/MemoryPageView.tsx';
+@source '../memory/MemoryView.tsx';
+@source '../employee-drawer/ChatsPanel.tsx';
+@source '../employee-drawer/EmployeeDrawer.tsx';
+@source '../employee-drawer/NotesPanel.tsx';
+@source '../employee-drawer/SubagentStrip.tsx';
+@source '../employee-drawer/TicketCard.tsx';
+@source '../editor/CodeEditor.tsx';
+@source '../editor/CodeMonaco.tsx';
+@source '../editor/DiffEditor.tsx';
+@source '../editor/DiffMonaco.tsx';
+@source '../files/ChangeDiff.tsx';
+@source '../files/ChangesPanel.tsx';
+@source '../files/CodeIntel.tsx';
+@source '../files/FileDialogs.tsx';
+@source '../files/FileEditor.tsx';
+@source '../files/FilesPanel.tsx';
+@source '../files/FilesView.tsx';
+@source '../files/FileTabs.tsx';
+@source '../files/FileTree.tsx';
+@source '../files/Viewers.tsx';
+/* Files that wrote classes the sheet never generated, found by `tailwind.test.ts` once it asked
+   (T249 shipped the first launch on Windows without its line, and the boss saw it bare). */
+@source '../App.tsx';
+@source '../windows-setup';
+@source '../repositories/AddRepoModal.tsx';
+@source '../repositories/InitialiseRepo.tsx';
+@source '../repositories/NewRepoSource.tsx';
+@source '../repositories/capture/RepositoriesCapture.tsx';
+@source '../settings/AppliesNextSession.tsx';
+@source '../memory/capture/MemoryCapture.tsx';
+@source '../memory/capture/MemoryStatesCapture.tsx';
+@source '../employee-drawer/capture-memory/NotesCapture.tsx';
+
+@layer base {
+  *,
+  ::before,
+  ::after {
+    box-sizing: border-box;
+  }
+
+  /*
+   * The window never scrolls: every screen fills it and scrolls inside its own view (T283). A page
+   * that did scroll showed the whole app slid up under the title bar, sidebar and all.
+   */
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+    margin: 0;
+    font-family: var(--font-primary);
+    color: var(--foreground);
+    background: var(--background);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  code,
+  kbd,
+  pre,
+  samp {
+    font-family: var(--font-mono);
+  }
+
+  /*
+   * A chip, a rung or a radio row is a `label` around its own visually hidden `input`
+   * (`CHOICE_INPUT`: absolute, 1px, transparent). Without a positioned ancestor close by, that
+   * input is laid out against some distant one — 221px under the Frontend chip in Edit repository —
+   * and focusing it on a click scrolls every scroller between the two to bring it into view, which
+   * left the panel scrolled with a gap under it. The label is the input's own containing block.
+   */
+  label:has(> input[type='radio']) {
+    position: relative;
+  }
+
+  label:has(> input[type='checkbox']) {
+    position: relative;
+  }
+
+  /*
+   * T190: the a11y rules ask for the element whose role carries the meaning — a `fieldset` where a
+   * label names a set of controls, a `ul` where a row of chips is a list. Neither draws anything of
+   * its own here: the frames draw the box, so both are reset to the block a `div` was.
+   */
+  fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-inline-size: 0;
+  }
+
+  /*
+   * **One scrollbar, thin, the same on every platform (T262).** A 6px thumb with a full radius on a
+   * transparent track and no arrow buttons, `--border` at rest and `--muted-foreground` under the
+   * pointer. Chromium draws it on all three, so macOS's overlay bars go too: one look everywhere.
+   *
+   * Only the `::-webkit-scrollbar` family, never `scrollbar-width` or `scrollbar-color` here:
+   * Chromium ignores every pseudo-element below on an element that sets either standard property.
+   */
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *::-webkit-scrollbar-track,
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: var(--border);
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-foreground);
+  }
+
+  *::-webkit-scrollbar-button {
+    display: none;
+  }
+
+  /*
+   * **A modal draws no scrollbar at all, and neither does any list inside one (T262)** — the Model
+   * picker over the Hire modal was two bars side by side. The content still scrolls with the wheel,
+   * the trackpad and the keyboard. Keyed on `aria-modal`, which every modal already carries and a
+   * popover never does, so a new modal is covered by the attribute it has to write anyway; here
+   * `scrollbar-width` is the point, and it wins over the thin bar above.
+   */
+  [aria-modal='true'],
+  [aria-modal='true'] * {
+    scrollbar-width: none;
+  }
+
+  [aria-modal='true']::-webkit-scrollbar,
+  [aria-modal='true'] *::-webkit-scrollbar {
+    display: none;
+  }
+
+  /*
+   * The Company drawer's tree fades at an edge while there is more to scroll that way, driven by
+   * the scroll itself: each fade is as deep as what is left, up to 32px, so it is gone at that end
+   * of the tree — and a tree that fits has no scroll timeline, so no animation and no fade at all.
+   *
+   * These four at-rules are here and not on the component because neither can be a utility: a
+   * registered custom property is document-scoped by definition, and a `@keyframes` name is global.
+   * What the drawer itself carries — the animation, its timeline, its range and the mask that reads
+   * these two lengths — is on the element, in `shell/Sidebar.tsx`.
+   */
+  @property --shell-nav-fade-above {
+    syntax: '<length>';
+    inherits: false;
+    initial-value: 0px;
+  }
+
+  @property --shell-nav-fade-below {
+    syntax: '<length>';
+    inherits: false;
+    initial-value: 0px;
+  }
+
+  @keyframes shell-nav-more-above {
+    from {
+      --shell-nav-fade-above: 0px;
+    }
+    to {
+      --shell-nav-fade-above: 32px;
+    }
+  }
+
+  @keyframes shell-nav-more-below {
+    from {
+      --shell-nav-fade-below: 32px;
+    }
+    to {
+      --shell-nav-fade-below: 0px;
+    }
+  }
+}
+
+/*
+ * Our tokens, as Tailwind's theme.
+ *
+ * `inline` is not a nicety: without it Tailwind emits `--color-card: var(--card)` on `:root` and
+ * CSS substitutes that there, so a subtree that flips `data-theme` — a Toast, a Tooltip, the
+ * gallery — would keep the root's colour. `inline` puts `var(--card)` in the utility itself, which
+ * resolves against the element that carries it.
+ *
+ * Three things fail silently here, and `tailwind.test.ts` is where each one is caught:
+ *
+ * 1. **A missing key compiles to nothing.** `font-bold` with no `--font-weight-bold` emits no
+ *    rule at all — no warning, no error, just a heading at 400. So every weight is declared, and
+ *    the test asserts every key in this block produces a rule.
+ * 2. **A key that maps to itself destroys the token.** `--radius-s: var(--radius-s)` is the one
+ *    key `inline` *does* write out, to an unlayered `:root, :host`, where it refers to itself and
+ *    is invalid at computed-value time. Every key below therefore has a name of its own: the radii
+ *    are `sm`/`md`/`lg`/`full` against our `s`/`m`/`l`/`pill`, the shadows read `--elevation-*`,
+ *    the status colours are `status-*` against Pen's `--color-success`, and the mono font is
+ *    `--font-code` because `--font-mono` is both Tailwind's key and Pen's token. The test compiles
+ *    this file and fails on any `:root` it emits.
+ * 3. **A class whose source text is not what React writes.** See `' in 'AddonsTab.tsx`.
+ *
+ * Not here: **z-index**. Tailwind v4 has no `--z-*` namespace — `z-40` is a bare value — and this
+ * app's z-indexes are already the plain integers 1…200, so there is nothing to map and naming them
+ * would be inventing a stack this app has not agreed on. **Letter spacing** likewise: the 20-odd
+ * values under `src/renderer` are per-frame measurements, not a scale, and `tracking-[0.5px]` says
+ * what it is.
+ */
+@theme inline {
+  /* Pen specifies this app in whole and half pixels, and the frames use 2, 3, 5, 9, 13, 14 as
+     freely as 4 and 8. So the spacing step is the pixel: `gap-14` is 14px, `p-16` is 16px. */
+  --spacing: 1px;
+
+  /* The surfaces and the ink, straight from `ui/tokens.css`. */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-subtle: var(--primary-subtle);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-canvas-foreground: var(--canvas-foreground);
+  --color-code-foreground: var(--code-foreground);
+  --color-canvas-chip: var(--canvas-chip);
+  --color-canvas-chip-strong: var(--canvas-chip-strong);
+  --color-canvas-edge: var(--canvas-edge);
+  --color-canvas-edge-soft: var(--canvas-edge-soft);
+  --color-danger-edge: var(--danger-edge);
+  --color-white: var(--white);
+  --color-black: var(--black);
+  --color-scrim: var(--scrim);
+  --color-scrim-soft: var(--scrim-soft);
+  --color-hairline: var(--hairline);
+  --color-diff-add-bg: var(--diff-add-bg);
+  --color-diff-add-code: var(--diff-add-code);
+  --color-diff-del-code: var(--diff-del-code);
+
+  /* The sidebar's own palette: the one surface Pen gives a set apart from the page. */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* A tint and its ink, for a row that says how something went. `status-` because Pen's own names
+     are `--color-success` and the rest, which are Tailwind's keys already — see trap 2. */
+  --color-status-success: var(--color-success);
+  --color-status-success-foreground: var(--color-success-foreground);
+  --color-status-warning: var(--color-warning);
+  --color-status-warning-foreground: var(--color-warning-foreground);
+  --color-status-error: var(--color-error);
+  --color-status-error-foreground: var(--color-error-foreground);
+  --color-status-info: var(--color-info);
+  --color-status-info-foreground: var(--color-info-foreground);
+
+  /* The brand palette: the logo, the marketing surfaces, and the three signal colours a glyph
+     takes when it is not sitting on a tint. */
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-light: var(--brand-primary-light);
+  --color-brand-success: var(--brand-success);
+  --color-brand-pink: var(--brand-pink);
+  --color-brand-warning: var(--brand-warning);
+  --color-brand-danger: var(--brand-danger);
+  --color-brand-surface: var(--brand-surface);
+  --color-brand-text-muted: var(--brand-text-muted);
+
+  /* One Employee's accent, set on the element that carries `data-accent`. `inline` is what makes
+     these work at all: the pair is declared per subtree, and the utility has to resolve there. */
+  --color-accent-tile: var(--accent-tile);
+  --color-accent-soft: var(--accent-soft);
+
+  /* The two inks the theme never named, and the Launcher's keycaps (T210c). */
+  --color-heading-ink: var(--heading-ink);
+  --color-soft-ink: var(--soft-ink);
+  --color-soft-ink-adaptive: var(--soft-ink-adaptive);
+  --color-launcher-selected: var(--launcher-selected-border);
+  --color-launcher-key-border: var(--launcher-key-border);
+  --color-launcher-key-fill: var(--launcher-key-fill);
+  --color-modal-scrim: var(--modal-scrim);
+
+  /*
+   * The dark panels and the ink on them (T210e): the stronger rule, the two white washes, the code
+   * surface and the terminal. Theme-invariant in `tokens.css`, which is what the five stylesheets
+   * these replaced did. The soft chrome ink is `--color-soft-ink` above — T210c's name for the same
+   * slate, and it landed first.
+   */
+  --color-border-strong: var(--border-strong);
+  --color-veil: var(--veil);
+  --color-veil-soft: var(--veil-soft);
+  --color-code: var(--code);
+  --color-code-gutter: var(--code-gutter);
+  --color-terminal: var(--terminal);
+  --color-terminal-foreground: var(--terminal-foreground);
+
+  /* The highlighter, one key per `TokenKind`: `text-syntax-keyword` and the rest. */
+  --color-syntax-plain: var(--syntax-plain);
+  --color-syntax-keyword: var(--syntax-keyword);
+  --color-syntax-type: var(--syntax-type);
+  --color-syntax-call: var(--syntax-call);
+  --color-syntax-string: var(--syntax-string);
+  --color-syntax-number: var(--syntax-number);
+  --color-syntax-comment: var(--syntax-comment);
+
+  /* `--font-sans` is Tailwind's name and `--font-primary` is Pen's, so the two can meet. The mono
+     stack cannot: Pen calls it `--font-mono` and so does Tailwind, so `font-code` it is. */
+  --font-sans: var(--font-primary);
+  --font-code: var(--font-mono);
+
+  /* Every weight this app draws. All four, because the fifth would be the silent one (trap 1). */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* The type scale, from `ui/tokens.css`: `text-11-5` is 11.5px on the 17px line the frames put it
+     on, and `text-11-5/14` keeps the size and moves the line. */
+  --text-9: var(--type-9);
+  --text-9-5: var(--type-9-5);
+  --text-9-5--line-height: var(--type-9-5-leading);
+  --text-10: var(--type-10);
+  --text-10--line-height: var(--type-10-leading);
+  --text-10-5: var(--type-10-5);
+  --text-10-5--line-height: var(--type-10-5-leading);
+  --text-11: var(--type-11);
+  --text-11--line-height: var(--type-11-leading);
+  --text-11-5: var(--type-11-5);
+  --text-11-5--line-height: var(--type-11-5-leading);
+  --text-12: var(--type-12);
+  --text-12--line-height: var(--type-12-leading);
+  --text-12-5: var(--type-12-5);
+  --text-12-5--line-height: var(--type-12-5-leading);
+  --text-13: var(--type-13);
+  --text-13--line-height: var(--type-13-leading);
+  --text-13-5: var(--type-13-5);
+  --text-13-5--line-height: var(--type-13-5-leading);
+  --text-14: var(--type-14);
+  --text-14--line-height: var(--type-14-leading);
+  --text-14-5: var(--type-14-5);
+  --text-14-5--line-height: var(--type-14-5-leading);
+  --text-15: var(--type-15);
+  --text-15--line-height: var(--type-15-leading);
+  --text-15-5: var(--type-15-5);
+  --text-16: var(--type-16);
+  --text-16--line-height: var(--type-16-leading);
+  --text-17: var(--type-17);
+  --text-17--line-height: var(--type-17-leading);
+  --text-18: var(--type-18);
+  --text-18--line-height: var(--type-18-leading);
+  --text-19: var(--type-19);
+  --text-19--line-height: var(--type-19-leading);
+  --text-20: var(--type-20);
+  --text-20--line-height: var(--type-20-leading);
+  --text-22: var(--type-22);
+  --text-22--line-height: var(--type-22-leading);
+  --text-24: var(--type-24);
+  --text-24--line-height: var(--type-24-leading);
+  --text-26: var(--type-26);
+  --text-30: var(--type-30);
+  --text-30--line-height: var(--type-30-leading);
+  --text-40: var(--type-40);
+  --text-40--line-height: var(--type-40-leading);
+  --text-56: var(--type-56);
+  --text-56--line-height: var(--type-56-leading);
+
+  /*
+   * `normal`, the line height a label takes when the frame gives it none. It is a key here because
+   * `leading-normal` and `text-12/normal` are otherwise the first trap above in its purest form:
+   * no key, no rule, and a paragraph's 15px line silently under a chip's word. Every other line
+   * height in the app is either a step of the scale above or a measurement from one frame.
+   */
+  --leading-normal: normal;
+
+  /* `sm`/`md`/`lg`/`full` against our `s`/`m`/`l`/`pill`: same reason as the shadows (trap 2).
+     `rounded-none` is Tailwind's own static utility and needs no key. */
+  --radius-xs: var(--radius-tight);
+  --radius-sm: var(--radius-s);
+  --radius-md: var(--radius-m);
+  --radius-lg: var(--radius-l);
+  --radius-full: var(--radius-pill);
+
+  /* The elevations, and the ring a focused control wears. */
+  --shadow-raised: var(--elevation-raised);
+  --shadow-floating: var(--elevation-floating);
+  --shadow-overlay: var(--elevation-overlay);
+  --shadow-card: var(--elevation-card);
+  --shadow-menu: var(--elevation-menu);
+  --shadow-toast: var(--elevation-toast);
+  --shadow-button-primary: var(--elevation-button-primary);
+  --shadow-knob: var(--elevation-knob);
+  --shadow-prompt: var(--elevation-prompt);
+  --shadow-modal: var(--elevation-modal);
+  --shadow-drawer: var(--elevation-drawer);
+  --shadow-employee-drawer: var(--elevation-employee-drawer);
+
+  /* The one animation a Tailwind screen draws: the found-repositories scan's spinner. Tailwind's
+     own animations arrive with its theme layer, which this setup does not import, so the keyframes
+     come with the key. */
+  --animate-spin: spin 1s linear infinite;
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  --shadow-focus: var(--focus-ring);
+
+  /*
+   * The Tokens tab's `Checking…` spinner. 900ms, not the 1s Tailwind's own `animate-spin` takes,
+   * so it keeps the turn the stylesheet gave it; the keyframes ride along inside the theme,
+   * because `animate-*` cannot find a `@keyframes` declared outside it.
+   */
+  --animate-check-spin: check-spin 900ms linear infinite;
+
+  @keyframes check-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}

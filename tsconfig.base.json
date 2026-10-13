@@ -1,0 +1,29 @@
+{
+  // What both projects agree on. `tsconfig.node.json` and `tsconfig.web.json` say only what is
+  // theirs: the libraries they run against, and the files they own.
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    // An override that is not said out loud is a rename away from silently not overriding (T183).
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    // A type-only import that looks like a value import is a runtime import to every bundler.
+    "verbatimModuleSyntax": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    // `env['HOME']` when the key is not declared: the index signature is not a spelling licence.
+    "noPropertyAccessFromIndexSignature": true,
+    // `{ a?: string }` takes a missing `a` and never an `a` that is there and undefined — the gap
+    // where the two mean different things: over IPC, in the database, and in a patch where a key
+    // that is not there means "leave this alone". On since T191; `docs/engineering.md` says which
+    // of the two an optional field is, and how a value that may be nothing is written into one.
+    "exactOptionalPropertyTypes": true
+  }
+}

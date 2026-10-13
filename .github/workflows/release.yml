@@ -1,0 +1,94 @@
+name: Release
+
+# Push a tag like v0.1.0 and every OS builds its installers and attaches them to a draft release.
+# The tag must match package.json's version. Publishing the draft is what makes it an update: the
+# app only reads published releases (`src/shared/app/updates.ts`).
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            package: package
+          - os: windows-latest
+            package: package:win
+          - os: ubuntu-latest
+            package: package:linux
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    env:
+      GIT_TERMINAL_PROMPT: '0'
+      GCM_INTERACTIVE: never
+    steps:
+      - uses: actions/checkout@v4
+      - name: The tag matches package.json's version
+        shell: bash
+        run: |
+          version=$(node -p "require('./package.json').version")
+          test "${GITHUB_REF_NAME}" = "v${version}" || { echo "Tag ${GITHUB_REF_NAME} != v${version}"; exit 1; }
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      # The same libraries the CI job installs: node-pty is compiled against Electron here, and the
+      # smoke run needs a display and what a packaged Electron links against.
+      - name: The packaging and runtime libraries a Linux build needs
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential python3 xvfb libnss3 libatk-bridge2.0-0 libgtk-3-0 libgbm1 \
+            libasound2t64 libsecret-1-0 libnotify4
+      - name: Let the runner start processes without scanning each one
+        if: runner.os == 'Windows'
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          Add-MpPreference -ExclusionPath "${{ github.workspace }}"
+          Add-MpPreference -ExclusionPath "$env:LOCALAPPDATA\pnpm-store"
+          Add-MpPreference -ExclusionPath "$env:TEMP"
+          Add-MpPreference -ExclusionProcess "node.exe"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: pnpm ${{ matrix.package }}
+      - name: Start what came out
+        if: runner.os != 'Linux'
+        run: node tools/smoke-packaged.mjs
+      - name: Start what came out
+        if: runner.os == 'Linux'
+        run: xvfb-run --auto-servernum node tools/smoke-packaged.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installers-${{ matrix.os }}
+          if-no-files-found: error
+          path: |
+            release/*.dmg
+            release/*.exe
+            release/*.AppImage
+            release/*.deb
+            release/*.blockmap
+
+  release:
+    name: Draft release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: installers
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          generate_release_notes: true
+          files: installers/*

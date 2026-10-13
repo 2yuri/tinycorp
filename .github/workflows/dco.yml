@@ -1,0 +1,49 @@
+name: DCO
+
+# Every commit carries a `Signed-off-by:` line — `git commit -s` — which is the Developer
+# Certificate of Origin: you wrote it, or you have the right to submit it under Apache-2.0. There is
+# no CLA and no bot to authorise: this repo takes the sign-off in the commit and nothing else.
+#
+# A script rather than an action, so the check is readable here and this repo depends on nothing to
+# run it. CONTRIBUTING.md says how to fix a branch that is missing one.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  sign-off:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The whole history: the check walks base..head, and a shallow clone has neither end.
+          fetch-depth: 0
+      - name: Every commit is signed off
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -eu
+          missing=0
+          for sha in $(git rev-list "$BASE".."$HEAD"); do
+            author="$(git show -s --format='%ae' "$sha")"
+            committer="$(git show -s --format='%ce' "$sha")"
+            trailers="$(git show -s --format='%(trailers:key=Signed-off-by,valueonly)' "$sha")"
+            if printf '%s' "$trailers" | grep -qiF "<$author>"; then continue; fi
+            if printf '%s' "$trailers" | grep -qiF "<$committer>"; then continue; fi
+            missing=$((missing + 1))
+            git show -s --format='  %h %s — authored by %an <%ae>' "$sha"
+          done
+          if [ "$missing" -gt 0 ]; then
+            echo
+            echo "$missing commit(s) above have no Signed-off-by line for their own author."
+            echo 'Sign the branch off and force-push:'
+            echo "  git rebase --signoff $BASE"
+            echo 'From now on: git commit -s. CONTRIBUTING.md has the rest.'
+            exit 1
+          fi
+          echo 'Every commit is signed off.'

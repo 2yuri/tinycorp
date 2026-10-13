@@ -1,0 +1,43 @@
+// `pnpm knip` runs with `--no-gitignore`, and has to (T238).
+//
+// knip reads git's ignore rules by default, and that includes `.git/info/exclude` — a file that
+// belongs to the clone rather than to the repo, which a desktop agent IDE writes its own scratch
+// paths into (`memory/`, `CLAUDE.md`, `.claude/`). One line of it, `memory/`, became the ignore
+// pattern `**/memory` and took `src/renderer/src/memory` and `src/main/features/memory` out of the
+// graph entirely. knip said nothing about the files it had dropped; it reported the exports those
+// folders import — `MarkdownEditor`, `MarkdownBody`, `gitSettings`, `CompanyPlanning` — as unused,
+// and the same checkout was red here and green in CI. `--no-gitignore` costs nothing, because
+// `entry` and `project` below name `src`, `tools` and `e2e` and reach no build output at all, and
+// it buys the one thing a linter owes its reader: the same answer on every machine.
+{
+  "$schema": "./node_modules/knip/schema.json",
+  "entry": [
+    "src/main/index.ts",
+    "src/preload/index.ts",
+    "src/renderer/src/main.tsx",
+    "src/renderer/src/ui/kit/index.ts",
+    "src/renderer/src/**/*-main.tsx",
+    "src/build/packaging.ts",
+    "electron.vite.config.ts",
+    "electron-builder.config.mjs",
+    "vitest.config.ts",
+    "playwright.config.ts",
+    "e2e/**/*.spec.ts",
+    "src/renderer/src/**/vite.config.mts",
+    "tools/*.mjs",
+    "tools/bench/bench-tokens.mjs",
+    "tools/bench/dm-mcp.mjs",
+    "tools/bench/**/*.test.ts",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.itest.ts"
+  ],
+  "project": ["src/**/*.{ts,tsx,mts}", "tools/*.mjs", "tools/bench/**/*.mjs", "e2e/*.ts"],
+  // The Files capture's fixture tree is content, not code: four files the harness reads through the
+  // engine's own reader so the screen has something that does not change (T209). Nothing imports
+  // them, and nothing should.
+  "ignore": ["src/renderer/src/files/capture/tree/**"],
+  "ignoreExportsUsedInFile": true,
+  "ignoreBinaries": ["opencode", "osascript", "plutil", "wsl.exe", "x-terminal-emulator"],
+  "rules": { "duplicates": "off" }
+}

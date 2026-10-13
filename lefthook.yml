@@ -1,0 +1,9 @@
+# Formatting and the safe lint fixes, on what is about to be committed and nothing else. Typecheck
+# and the suite stay out: they take minutes and belong to `pnpm typecheck` and CI, and a hook that
+# makes `git commit` slow is a hook people learn to pass `--no-verify` to (T183).
+pre-commit:
+  jobs:
+    - name: biome
+      glob: '*.{js,mjs,cjs,ts,mts,cts,jsx,tsx,json,jsonc,css}'
+      run: pnpm exec biome check --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+      stage_fixed: true

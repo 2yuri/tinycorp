@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Dev-only page for design captures of the shell's sidebar: no CSP, so Vite's dev client can run. -->
+    <title>tinycorp — sidebar capture</title>
+    <style>
+      body {
+        margin: 0;
+        background: #0f172a;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- The preload bridge, empty and before any module: a screen binds its corner of it the moment
+         it is imported, and since T202 a front door brings its folder's neighbours with it. The
+         harness puts its own stub over this one. -->
+    <script>
+      window.tinyCorp = {}
+    </script>
+    <script type="module" src="./src/shell/capture/capture-main.tsx"></script>
+  </body>
+</html>

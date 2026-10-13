@@ -1,0 +1,7 @@
+# Commits that only moved whitespace and import lines. `git blame --ignore-revs-file
+# .git-blame-ignore-revs` walks past them, and `git config blame.ignoreRevsFile
+# .git-blame-ignore-revs` makes that the default in this clone. GitHub reads the file by name
+# and does the same in its own blame view.
+
+# style(T183): the whole repo through the formatter, once
+9f056b16d86d1f8f7e5ee35970eef798eb90adfa

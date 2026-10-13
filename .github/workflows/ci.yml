@@ -1,0 +1,127 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# One job per platform TinyCorp ships on, and each one does the same six things: install, lint,
+# typecheck, run the suite, build, package, and start what came out of the packaging. AGENTS.md
+# says every change works on macOS, Windows and Linux; these three jobs are what says it is true
+# rather than intended (T177). Only Linux runs `pnpm knip`: it reads the import graph and nothing
+# in the answer is platform-specific, so the other two would pay for the same result (T183).
+
+jobs:
+  # Linux was the platform the suite ran on and nobody had ever packaged or started (T177). Now it
+  # is the one that proves the AppImage and the .deb, and starts the AppImage under a virtual
+  # display — a runner has no screen, and a window that cannot be drawn is not a window that failed.
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      # node-pty has no Linux prebuild, so packaging compiles it against Electron's own headers
+      # (`src/build/packaging.ts`). `xvfb` is the display the smoke run draws into. The rest is
+      # what a packaged Electron app links against at start: without libnss3 and libgbm it exits
+      # before any window and the smoke run would blame the build.
+      - name: The packaging and runtime libraries a Linux build needs
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential python3 xvfb libnss3 libatk-bridge2.0-0 libgtk-3-0 libgbm1 \
+            libasound2t64 libsecret-1-0 libnotify4
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      # Linux only: knip reads the whole graph once and the answer is the same on all three.
+      - run: pnpm knip
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      # The fourth tier (T189): Playwright starts the built app and drives the real screens. It
+      # runs here and on neither of the other two, because what it proves — that the bundle starts
+      # and the processes talk to each other — the smoke run already proves on all three, and a
+      # third copy of it would buy minutes of runner time rather than an answer. `xvfb-run` is the
+      # display, as it is for the smoke run; the suite passes `--no-sandbox` for the same reason.
+      - run: xvfb-run --auto-servernum pnpm test:e2e
+      # A red e2e is a red screen, and the trace is the only way to see which one it was.
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-traces
+          path: e2e/.results
+          if-no-files-found: ignore
+          retention-days: 7
+      - run: pnpm package:linux
+      # `xvfb-run` gives it a display; the runner supplies `APPIMAGE_EXTRACT_AND_RUN` and
+      # `--no-sandbox` from `tools/smoke-packaged.mjs`, because a runner has no FUSE and an
+      # extracted AppImage cannot carry a setuid sandbox helper. Exit 0, one window, empty crash log.
+      - run: xvfb-run --auto-servernum node tools/smoke-packaged.mjs
+
+  # The Macs the boss and the first testers are on, and the only platform that can build the DMG.
+  macos:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      - run: pnpm package
+      # Starts `release/mac-arm64/TinyCorp.app`'s own binary, opens no Company, loads one window
+      # and quits. The runner is Apple Silicon, which is the only architecture the DMG is built for.
+      - run: node tools/smoke-packaged.mjs
+
+  # The boss's first beta testers are on Windows and nobody had ever run TinyCorp there (T166).
+  # This job is the proof: the same suite, then the installer, then the packaged exe started for
+  # real — no Electron binary is skipped here, because packaging and the smoke run both need it.
+  windows:
+    runs-on: windows-latest
+    # The suite is 430-odd files, each in its own process. Windows starts a process far more slowly
+    # than the Mac does, so this is generous — but a hang must end as a red job, not as hours.
+    timeout-minutes: 60
+    env:
+      # The suite makes real repos in temp folders and runs real git in them. Windows runners ship
+      # Git Credential Manager, which would put a dialog in front of anything that looks like a
+      # remote it should authenticate — on a runner nobody can answer one.
+      GIT_TERMINAL_PROMPT: '0'
+      GCM_INTERACTIVE: never
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      # Defender scans every one of the hundreds of node processes the suite starts and every file
+      # they write; the repo, the store and the temp folder are ours and nobody else's on a
+      # throwaway runner. Best effort: an image that refuses this still runs the suite, only slower.
+      - name: Let the runner start processes without scanning each one
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          Add-MpPreference -ExclusionPath "${{ github.workspace }}"
+          Add-MpPreference -ExclusionPath "$env:LOCALAPPDATA\pnpm-store"
+          Add-MpPreference -ExclusionPath "$env:TEMP"
+          Add-MpPreference -ExclusionProcess "node.exe"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      # Every test the Mac runs, plus the two that only mean something here: a `.cmd` shim spawned
+      # through the resolver in a real pseudo-terminal (`node-pty-spawn.test.ts`).
+      - run: pnpm test
+      - run: pnpm build
+      - run: pnpm package:win
+      # Starts `release\win-unpacked\TinyCorp.exe`, opens no Company, loads one window and quits.
+      - run: node tools/smoke-packaged.mjs

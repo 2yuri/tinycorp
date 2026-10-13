@@ -1,0 +1,42 @@
+name: PR title
+
+# Conventional Commits, because release-please reads them: the type decides whether a release is a
+# patch or a minor, and the scope is the ticket the work came from — `feat(T182): …`. The scope is
+# not *required* here, because a dependency bump or a docs fix has no ticket; the type is.
+#
+# `pull_request_target` rather than `pull_request` so the job has a token that can leave the comment
+# saying what is wrong with the title — a fork's `pull_request` token is read-only, and a check that
+# fails without saying why is a check a first-time contributor cannot act on. Nothing from the pull
+# request is checked out or run here, which is the one thing that would make this event dangerous.
+
+on:
+  pull_request_target:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  title:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            refactor
+            chore
+            docs
+            test
+            perf
+            build
+          # A scope is optional, and when there is one it is usually the ticket: `feat(T182): …`.
+          requireScope: false
+          # `feat(T182): The office remembers…` reads as a heading rather than a change.
+          subjectPattern: ^(?![A-Z]).+$
+          subjectPatternError: |
+            The subject "{subject}" of "{title}" should start lower case, and say what the change
+            does: `feat(T182): the office remembers where everyone was sitting`.

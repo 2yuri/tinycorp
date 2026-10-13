@@ -1,0 +1,85 @@
+import { readFileSync } from 'node:fs'
+import { providerEntry } from '../../../shared/domain/providers'
+import { describeProviderConformance, type FakeProcess } from '../provider-conformance'
+import { create__PASCAL__Adapter } from './adapter'
+
+/**
+ * __NAME__ against the Provider conformance suite.
+ *
+ * Every Provider answers the same questions; this file is where __NAME__ answers them. Fill in
+ * `cli-todo.ts` first, then bring the readers below into line with what you wrote there — they are
+ * how the suite looks at the command line your adapter built. Anything __NAME__ does that no other
+ * Provider does belongs in tests beside this call, not inside the suite.
+ *
+ * No test here may spend the boss's subscription: everything runs against a fake process. A check
+ * against the real CLI goes in `*.itest.ts`, which `pnpm test` does not run.
+ */
+
+const entry = providerEntry('__ID__')
+const model = entry.models[0]!
+
+/** The conversation id __NAME__'s hooks carry. Your CLI's own, if it names its conversations. */
+const CONVERSATION = '11111111-2222-3333-4444-555555555555'
+
+describeProviderConformance({
+  provider: '__ID__',
+  command: entry.command,
+  create: (setup) => create__PASCAL__Adapter({ ...setup, command: entry.command, installed: () => true }),
+
+  // TODO: read each of these back the way your CLI actually takes it.
+  instructionsOn: (process) => after(process, '--system-prompt'),
+  continues: (process, sessionId) => after(process, '--continue') === sessionId,
+  startsFresh: (process) => after(process, '--continue') === null,
+  mcpOn(process) {
+    const path = after(process, '--mcp-config')
+    if (path === null) return null
+    const config = JSON.parse(readFileSync(path, 'utf8')) as {
+      mcpServers: { company: { url: string; headers: { Authorization: string } } }
+    }
+    return {
+      url: config.mcpServers.company.url,
+      token: config.mcpServers.company.headers.Authorization.replace('Bearer ', ''),
+    }
+  },
+  modelOn(process) {
+    const chosen = after(process, '--model')
+    return chosen === null ? null : { model: chosen, effort: after(process, '--effort') }
+  },
+  model: { id: model.id, model: model.model, effort: model.effort },
+
+  // TODO: the hook payloads __NAME__ really sends, copied from its own output.
+  signals: {
+    ready: { event: 'start', conversation: CONVERSATION },
+    busy: { event: 'tool', conversation: CONVERSATION },
+    idle: { event: 'done', conversation: CONVERSATION },
+    quiet: { event: 'heartbeat', conversation: CONVERSATION },
+  },
+  resumed: {
+    continued: { event: 'start', conversation: CONVERSATION, resumed: true },
+    fresh: { event: 'start', conversation: CONVERSATION, resumed: false },
+  },
+  signalSessionId: CONVERSATION,
+
+  // TODO: what `__ID__ <statusArgs>` really prints when the boss is signed in, and when they are
+  // not. The suite hands these to the adapter instead of running the CLI, so nothing is spawned.
+  signIn: {
+    in: { kind: 'output', code: 0, output: 'Signed in as boss@example.com' },
+    out: { kind: 'output', code: 1, output: 'Not signed in.' },
+  },
+
+  // TODO: what __NAME__ prints when the subscription limit is hit, in its own words.
+  limit: {
+    output: 'Usage limit reached. Resets in 2h 15m.',
+    now: '2026-01-01T10:00:00.000Z',
+    resetsAt: '2026-01-01T12:15:00.000Z',
+  },
+  ordinary: 'Reading src/index.ts',
+  // TODO: the key that submits a prompt, the same one you wrote as `submitKey`.
+  submit: '\r',
+})
+
+/** The value after `flag` on the command line, or null when the flag is not there. */
+function after(process: FakeProcess, flag: string): string | null {
+  const at = process.args.indexOf(flag)
+  return at === -1 ? null : (process.args[at + 1] ?? null)
+}

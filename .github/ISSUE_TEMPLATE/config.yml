@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question, or an idea you want to talk through
+    url: https://github.com/2yuri/tinycorp/discussions
+    about: Discussions is the place for "how do I", "is this meant to", and anything not yet a bug or a request.
+  - name: Security vulnerability
+    url: https://github.com/2yuri/tinycorp/security/advisories/new
+    about: Report it privately. SECURITY.md says what the attack surface is and when we reply.
+  - name: Code of Conduct
+    url: https://github.com/2yuri/tinycorp/blob/main/CODE_OF_CONDUCT.md
+    about: Contributor Covenant 2.1. Reports go to hello@tinycorp.club.

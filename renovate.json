@@ -1,0 +1,19 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "dependencyDashboard": true,
+  "schedule": ["before 9am on monday"],
+  "minimumReleaseAge": "3 days",
+  "packageRules": [
+    {
+      "description": "Electron and the two tools that build against it move together: electron-vite and electron-builder each track Electron's majors, and a bump to one of the three without the others is a build that fails in a way nobody can read. One pull request, and the packaging jobs on all three platforms judge it.",
+      "groupName": "electron",
+      "matchPackageNames": ["electron", "electron-builder", "electron-vite"]
+    },
+    {
+      "description": "TypeScript is held below 8 until somebody has actually read that release: every `pnpm typecheck` in this repo and the diagnostics the Files view shows an Employee come from this compiler, so a major here is a day's work and not a dependency bump.",
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": "<8"
+    }
+  ]
+}

@@ -1,0 +1,151 @@
+{
+  "--sidebar": {
+    "type": "color",
+    "value": [{ "value": "#E7E8E5" }, { "value": "#18181b", "theme": { "Mode": "Dark" } }]
+  },
+  "--sidebar-foreground": {
+    "type": "color",
+    "value": [{ "value": "#666666" }, { "value": "#fafafa", "theme": { "Mode": "Dark" } }]
+  },
+  "--sidebar-primary": {
+    "type": "color",
+    "value": [{ "value": "#18181b" }, { "value": "#18181b", "theme": { "Mode": "Dark" } }]
+  },
+  "--sidebar-primary-foreground": {
+    "type": "color",
+    "value": [{ "value": "#fafafa" }, { "value": "#fafafa", "theme": { "Mode": "Dark" } }]
+  },
+  "--sidebar-border": {
+    "type": "color",
+    "value": [{ "value": "#CBCCC9" }, { "value": "#ffffff1a", "theme": { "Mode": "Dark" } }]
+  },
+  "--sidebar-accent": {
+    "type": "color",
+    "value": [{ "value": "#CBCCC9" }, { "value": "#2a2a30", "theme": { "Mode": "Dark" } }]
+  },
+  "--sidebar-accent-foreground": {
+    "type": "color",
+    "value": [{ "value": "#18181b" }, { "value": "#fafafa", "theme": { "Mode": "Dark" } }]
+  },
+  "--sidebar-ring": {
+    "type": "color",
+    "value": [{ "value": "#71717a" }, { "value": "#71717a", "theme": { "Mode": "Dark" } }]
+  },
+  "--background": {
+    "type": "color",
+    "value": [{ "value": "#F8FAFC", "theme": { "Mode": "Light" } }, { "value": "#0F172A", "theme": { "Mode": "Dark" } }]
+  },
+  "--foreground": {
+    "type": "color",
+    "value": [{ "value": "#0F172A", "theme": { "Mode": "Light" } }, { "value": "#F8FAFC", "theme": { "Mode": "Dark" } }]
+  },
+  "--card": {
+    "type": "color",
+    "value": [{ "value": "#FFFFFF", "theme": { "Mode": "Light" } }, { "value": "#1E293B", "theme": { "Mode": "Dark" } }]
+  },
+  "--card-foreground": {
+    "type": "color",
+    "value": [{ "value": "#0F172A", "theme": { "Mode": "Light" } }, { "value": "#F8FAFC", "theme": { "Mode": "Dark" } }]
+  },
+  "--popover": {
+    "type": "color",
+    "value": [{ "value": "#FFFFFF", "theme": { "Mode": "Light" } }, { "value": "#1E293B", "theme": { "Mode": "Dark" } }]
+  },
+  "--popover-foreground": {
+    "type": "color",
+    "value": [{ "value": "#0F172A", "theme": { "Mode": "Light" } }, { "value": "#F8FAFC", "theme": { "Mode": "Dark" } }]
+  },
+  "--primary": { "type": "color", "value": "#6366F1" },
+  "--primary-foreground": { "type": "color", "value": "#FFFFFF" },
+  "--secondary": {
+    "type": "color",
+    "value": [{ "value": "#F1F5F9", "theme": { "Mode": "Light" } }, { "value": "#334155", "theme": { "Mode": "Dark" } }]
+  },
+  "--secondary-foreground": {
+    "type": "color",
+    "value": [{ "value": "#0F172A", "theme": { "Mode": "Light" } }, { "value": "#F8FAFC", "theme": { "Mode": "Dark" } }]
+  },
+  "--muted": {
+    "type": "color",
+    "value": [{ "value": "#F1F5F9", "theme": { "Mode": "Light" } }, { "value": "#1E293B", "theme": { "Mode": "Dark" } }]
+  },
+  "--muted-foreground": {
+    "type": "color",
+    "value": [{ "value": "#64748B", "theme": { "Mode": "Light" } }, { "value": "#94A3B8", "theme": { "Mode": "Dark" } }]
+  },
+  "--accent": { "type": "color", "value": "#8B5CF6" },
+  "--accent-foreground": { "type": "color", "value": "#FFFFFF" },
+  "--destructive": { "type": "color", "value": "#EF4444" },
+  "--border": {
+    "type": "color",
+    "value": [{ "value": "#E2E8F0", "theme": { "Mode": "Light" } }, { "value": "#334155", "theme": { "Mode": "Dark" } }]
+  },
+  "--input": {
+    "type": "color",
+    "value": [{ "value": "#E2E8F0", "theme": { "Mode": "Light" } }, { "value": "#334155", "theme": { "Mode": "Dark" } }]
+  },
+  "--ring": { "type": "color", "value": "#6366F1" },
+  "--white": { "type": "color", "value": "#FFFFFF" },
+  "--black": { "type": "color", "value": "#000000" },
+  "--font-primary": { "type": "string", "value": "Inter" },
+  "--font-secondary": { "type": "string", "value": "Inter" },
+  "--radius-none": { "type": "number", "value": 0 },
+  "--radius-pill": { "type": "number", "value": 999 },
+  "--color-success": {
+    "type": "color",
+    "value": [{ "value": "#DCFCE7", "theme": { "Mode": "Light" } }, { "value": "#0B2E17", "theme": { "Mode": "Dark" } }]
+  },
+  "--color-success-foreground": {
+    "type": "color",
+    "value": [{ "value": "#15803D", "theme": { "Mode": "Light" } }, { "value": "#4ADE80", "theme": { "Mode": "Dark" } }]
+  },
+  "--color-warning": {
+    "type": "color",
+    "value": [{ "value": "#FEF3C7", "theme": { "Mode": "Light" } }, { "value": "#3B2503", "theme": { "Mode": "Dark" } }]
+  },
+  "--color-warning-foreground": {
+    "type": "color",
+    "value": [{ "value": "#B45309", "theme": { "Mode": "Light" } }, { "value": "#FBBF24", "theme": { "Mode": "Dark" } }]
+  },
+  "--color-error": {
+    "type": "color",
+    "value": [{ "value": "#FEE2E2", "theme": { "Mode": "Light" } }, { "value": "#3B0D0D", "theme": { "Mode": "Dark" } }]
+  },
+  "--color-error-foreground": {
+    "type": "color",
+    "value": [{ "value": "#B91C1C", "theme": { "Mode": "Light" } }, { "value": "#F87171", "theme": { "Mode": "Dark" } }]
+  },
+  "--color-info": {
+    "type": "color",
+    "value": [{ "value": "#EEF2FF", "theme": { "Mode": "Light" } }, { "value": "#1E1B4B", "theme": { "Mode": "Dark" } }]
+  },
+  "--color-info-foreground": {
+    "type": "color",
+    "value": [{ "value": "#4338CA", "theme": { "Mode": "Light" } }, { "value": "#A5B4FC", "theme": { "Mode": "Dark" } }]
+  },
+  "--radius-m": { "type": "number", "value": 12 },
+  "brand-ink": { "type": "color", "value": "#0F172A" },
+  "brand-primary": { "type": "color", "value": "#6366F1" },
+  "brand-primary-light": { "type": "color", "value": "#8B5CF6" },
+  "brand-success": { "type": "color", "value": "#22C55E" },
+  "brand-warning": { "type": "color", "value": "#F59E0B" },
+  "brand-danger": { "type": "color", "value": "#EF4444" },
+  "brand-surface": { "type": "color", "value": "#F8FAFC" },
+  "brand-text-muted": { "type": "color", "value": "#64748B" },
+  "--primary-hover": { "type": "color", "value": "#4F46E5" },
+  "--primary-subtle": {
+    "type": "color",
+    "value": [{ "value": "#EEF2FF", "theme": { "Mode": "Light" } }, { "value": "#312E81", "theme": { "Mode": "Dark" } }]
+  },
+  "--destructive-foreground": { "type": "color", "value": "#FFFFFF" },
+  "--font-mono": { "type": "string", "value": "JetBrains Mono" },
+  "--radius-s": { "type": "number", "value": 8 },
+  "--radius-l": { "type": "number", "value": 20 },
+  "--space-1": { "type": "number", "value": 4 },
+  "--space-2": { "type": "number", "value": 8 },
+  "--space-3": { "type": "number", "value": 12 },
+  "--space-4": { "type": "number", "value": 16 },
+  "--space-5": { "type": "number", "value": 24 },
+  "--space-6": { "type": "number", "value": 32 },
+  "--space-7": { "type": "number", "value": 48 }
+}

@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023"],
+    "types": ["node"],
+    // `src/build/packaging.ts` is loaded by Node itself (electron-builder's config), so it imports
+    // with the file's real extension.
+    "allowImportingTsExtensions": true
+  },
+  "include": [
+    "src/main/**/*",
+    "src/preload/**/*",
+    "src/shared/**/*",
+    "src/build/**/*",
+    "src/integration/**/*",
+    "src/architecture.test.ts",
+    "electron.vite.config.ts",
+    "vitest.config.ts",
+    "playwright.config.ts",
+    "e2e/**/*",
+    "tools/bench/**/*"
+  ]
+}
