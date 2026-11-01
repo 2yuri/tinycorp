@@ -38,6 +38,7 @@ Every document in `docs/`, plus the pages at the repo root, one line each.
 | [`../SECURITY.md`](../SECURITY.md) | The attack surface edge by edge, what is already known and not a finding, and how to report a vulnerability privately. |
 | [`../CODE_OF_CONDUCT.md`](../CODE_OF_CONDUCT.md) | Contributor Covenant 2.1, and who to write to. |
 | [`windows.md`](windows.md) | The Windows build: finding a Provider natively or inside WSL, path translation, the virtual switch, git, and what CI covers. |
+| [`RELEASING.md`](RELEASING.md) | Cutting a release from a tag, and the five secrets that make the macOS DMG signed, notarised and stapled. |
 | [`linux.md`](linux.md) | The Linux build: the distro floors, the packages a desktop needs, the keyring, and packaging the AppImage and `.deb`. |
 
 ## Providers and forges
