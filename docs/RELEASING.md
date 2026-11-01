@@ -52,10 +52,16 @@ because that is a mistake rather than a fork.
 | `NOTARY_KEY_ID` | That key's Key ID. |
 | `NOTARY_ISSUER_ID` | The Issuer ID shown above the keys list in App Store Connect. |
 
-The workflow writes the `.p12` and the `.p8` to the runner's temp folder and hands them to
-electron-builder as `CSC_LINK` / `CSC_KEY_PASSWORD` and `APPLE_API_KEY` / `APPLE_API_KEY_ID` /
-`APPLE_API_ISSUER`. It also imports the certificate into a keychain of its own for signing the DMG,
-and deletes the keychain and both files at the end of the job.
+The workflow imports the `.p12` into a temporary keychain of its own and deletes the `.p12` right
+away. electron-builder signs from that keychain (`CSC_KEYCHAIN`, identity `Developer ID
+Application`), and so does the DMG step. The `.p8` goes to the runner's temp folder, and its path
+goes to electron-builder as `APPLE_API_KEY`, with `APPLE_API_KEY_ID` and `APPLE_API_ISSUER`. The
+keychain and the `.p8` are deleted at the end of the job.
+
+The workflow never gives electron-builder the `.p12` itself (`CSC_LINK` / `CSC_KEY_PASSWORD`).
+electron-builder would import it into a keychain it creates itself, and on current macOS runners
+that keychain fails to unlock: `security set-key-partition-list … SecKeychainUnlock: The user name
+or passphrase you entered is not correct`.
 
 ### The signing certificate
 
@@ -105,11 +111,12 @@ the cloud cannot be exported, so make one with a private key on this Mac:
 ## Signing on a Mac by hand
 
 `pnpm package` never signs, even when the keychain holds a Developer ID: `macSigning` gives
-electron-builder no identity unless `CSC_LINK` is set. To build a signed, notarised DMG locally,
-export the same variables the workflow does and run it:
+electron-builder no identity unless `CSC_KEYCHAIN` is set. To build a signed, notarised DMG locally,
+point it at the keychain that holds your Developer ID Application certificate and give it the notary
+key:
 
 ```sh
-export CSC_LINK=/path/to/developer-id.p12 CSC_KEY_PASSWORD='…'
+export CSC_KEYCHAIN=~/Library/Keychains/login.keychain-db
 export APPLE_API_KEY=/path/to/AuthKey_XXXXXXXXXX.p8 APPLE_API_KEY_ID=… APPLE_API_ISSUER=…
 pnpm package
 ```

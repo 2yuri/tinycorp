@@ -190,15 +190,20 @@ export function packagingFor(platform: NodeJS.Platform, env: NodeJS.ProcessEnv =
 /**
  * How the Mac build is signed, which depends on whether the build was handed a Developer ID.
  *
- * **With one** — `CSC_LINK` names the exported "Developer ID Application" `.p12`, which is what
- * `.github/workflows/release.yml` sets when the repository has the secrets (`docs/RELEASING.md`) —
- * electron-builder imports it into a keychain of its own, signs every binary in the bundle with the
- * hardened runtime and a secure timestamp (`@electron/osx-sign` passes `--timestamp` unless told
- * otherwise), and hands the `.app` to Apple's notary service with the App Store Connect API key in
- * `APPLE_API_KEY`, `APPLE_API_KEY_ID` and `APPLE_API_ISSUER`, stapling the ticket on its return.
- * The DMG around it is signed, notarised and stapled by the workflow, because electron-builder
- * signs a DMG without a timestamp and notarises none. The identity is left for electron-builder to
- * find in the certificate it imported, so a fork with its own Developer ID needs no edit here.
+ * **With one** — `CSC_KEYCHAIN` names an unlocked keychain holding the "Developer ID Application"
+ * certificate, which `.github/workflows/release.yml` imports from the repository's secrets
+ * (`docs/RELEASING.md`) — electron-builder signs every binary in the bundle from that keychain with
+ * the hardened runtime and a secure timestamp (`@electron/osx-sign` passes `--timestamp` unless
+ * told otherwise), and hands the `.app` to Apple's notary service with the App Store Connect API
+ * key in `APPLE_API_KEY`, `APPLE_API_KEY_ID` and `APPLE_API_ISSUER`, stapling the ticket on its
+ * return. The DMG around it is signed, notarised and stapled by the workflow, because
+ * electron-builder signs a DMG without a timestamp and notarises none.
+ *
+ * The workflow imports the certificate itself rather than handing electron-builder the `.p12` in
+ * `CSC_LINK`: electron-builder's own temporary keychain fails to unlock on current macOS runners
+ * (`set-key-partition-list` … `SecKeychainUnlock`), which is what the first signed run hit. The
+ * identity is named by its type and not its holder, so a fork with its own Developer ID needs no
+ * edit here.
  *
  * The hardened runtime is what notarisation requires, and it takes away the writable, executable
  * memory V8 compiles into, so `resources/entitlements.mac.plist` grants that one thing back — to
@@ -212,8 +217,9 @@ export function packagingFor(platform: NodeJS.Platform, env: NodeJS.ProcessEnv =
  * the first time with a right-click → Open.
  */
 export function macSigning(env: NodeJS.ProcessEnv) {
-  if (!env['CSC_LINK']) return { identity: null }
+  if (!env['CSC_KEYCHAIN']) return { identity: null }
   return {
+    identity: 'Developer ID Application',
     hardenedRuntime: true,
     entitlements: 'resources/entitlements.mac.plist',
     entitlementsInherit: 'resources/entitlements.mac.plist',

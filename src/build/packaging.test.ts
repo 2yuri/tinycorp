@@ -57,14 +57,17 @@ describe('The package', () => {
       expect(mac).toHaveProperty('identity', null)
       expect(mac).not.toHaveProperty('notarize')
       expect(macSigning({ CSC_IDENTITY_AUTO_DISCOVERY: 'false' })).toEqual({ identity: null })
+      // A `.p12` alone is not the signed path: electron-builder's own keychain for it fails to unlock
+      // on the runners, so the release imports the certificate and names the keychain instead.
+      expect(macSigning({ CSC_LINK: '/tmp/developer-id.p12' })).toEqual({ identity: null })
     })
 
     // Notarisation refuses a bundle without the hardened runtime, and the hardened runtime kills V8
     // without allow-jit: the two have to arrive together or the release fails at Apple, or at launch.
     it('signs with the hardened runtime and notarises when handed a Developer ID', () => {
-      const { mac } = packagingFor('darwin', { CSC_LINK: '/tmp/developer-id.p12' })
-      expect(mac).not.toHaveProperty('identity')
+      const { mac } = packagingFor('darwin', { CSC_KEYCHAIN: '/tmp/signing.keychain-db' })
       expect(mac).toMatchObject({
+        identity: 'Developer ID Application',
         hardenedRuntime: true,
         notarize: true,
         entitlements: 'resources/entitlements.mac.plist',

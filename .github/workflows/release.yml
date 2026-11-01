@@ -65,11 +65,12 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
       # All five or none: a fork has none and builds unsigned, while a repository with some of them
-      # is a mistake to stop on, not a release to ship unsigned. electron-builder reads the
-      # certificate from CSC_LINK and the notary key from APPLE_API_KEY*, and `macSigning` in
-      # `src/build/packaging.ts` turns signing on when CSC_LINK is set. The same certificate also
-      # goes into a keychain of this job's own, for the DMG step below: electron-builder deletes the
-      # keychain it makes once the app is signed.
+      # is a mistake to stop on, not a release to ship unsigned. The certificate goes into a
+      # keychain of this job's own, and electron-builder signs from it through CSC_KEYCHAIN —
+      # never from CSC_LINK, because the temporary keychain electron-builder makes for a .p12 fails
+      # to unlock on current runners (`set-key-partition-list` … `SecKeychainUnlock`). `macSigning`
+      # in `src/build/packaging.ts` turns signing on when CSC_KEYCHAIN is set; the notary key goes
+      # to electron-builder as APPLE_API_KEY*. The DMG step below signs from the same keychain.
       - name: Developer ID, if the repository has one
         if: runner.os == 'macOS'
         env:
@@ -107,12 +108,15 @@ jobs:
           # Each keychain already searched is one word; splitting them apart is the point.
           # shellcheck disable=SC2046
           security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          rm -f "$p12"
+          security find-identity -v -p codesigning "$keychain" | grep -q 'Developer ID Application' \
+            || { echo "::error::The imported certificate is not a Developer ID Application identity"; exit 1; }
 
           {
             echo "MAC_SIGNED=true"
             echo "SIGNING_KEYCHAIN=$keychain"
-            echo "CSC_LINK=$p12"
-            echo "CSC_KEY_PASSWORD=$P12_PASSWORD"
+            echo "CSC_KEYCHAIN=$keychain"
+            echo "CSC_IDENTITY_AUTO_DISCOVERY=true"
             echo "APPLE_API_KEY=$p8"
             echo "APPLE_API_KEY_ID=$KEY_ID"
             echo "APPLE_API_ISSUER=$ISSUER_ID"
