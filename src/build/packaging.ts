@@ -16,7 +16,7 @@ import { APP_ID, APP_NAME } from '../shared/app/app-name.ts'
  * answer genuinely depends on the host: whether node-pty has to be compiled. {@link packaging} is
  * the answer for this machine, and the tests ask for all three.
  */
-export function packagingFor(platform: NodeJS.Platform) {
+export function packagingFor(platform: NodeJS.Platform, env: NodeJS.ProcessEnv = process.env) {
   return {
     appId: APP_ID,
     productName: APP_NAME,
@@ -55,14 +55,15 @@ export function packagingFor(platform: NodeJS.Platform) {
      * TinyCorp's own code. `--inspect` is a third door into the same room.
      *
      * The next two hold the app to the asar the build shipped, so the same process cannot edit
-     * `app.asar` in place and own every launch after this one. They get much stronger once there is
-     * a Developer ID signature — decision 54 says there is none yet — and turning them on now means
-     * signing is the only step left rather than one of two.
+     * `app.asar` in place and own every launch after this one. They are much stronger in a release
+     * signed with the Developer ID ({@link macSigning}), where the asar's hash is sealed by a
+     * signature nobody else can make.
      *
      * `resetAdHocDarwinSignature` is not a fuse but the price of one: flipping a fuse rewrites the
      * binary, which invalidates the ad-hoc signature Electron ships with, and Apple Silicon refuses
-     * to run a binary whose signature does not match. `mac.identity` is null, so nothing re-signs
-     * the bundle afterwards and the flip has to do it itself.
+     * to run a binary whose signature does not match. An unsigned build has `mac.identity`
+     * null, so nothing re-signs the bundle afterwards and the flip has to do it itself; a signed one
+     * is re-signed over it.
      *
      * electron-builder flips these itself, right before signing, through its own `@electron/fuses`
      * — which is why this is data here and not an `afterPack` hook with a dependency behind it.
@@ -78,12 +79,9 @@ export function packagingFor(platform: NodeJS.Platform) {
     },
     /**
      * arm64 only, not a universal binary: a universal build has to lipo two complete app bundles
-     * together, and the only Macs this runs on are Apple Silicon. Unsigned and un-notarised: the
-     * app keeps the ad-hoc signature Electron's own binary ships with, which is the least Apple
-     * Silicon will run, and the boss opens it the first time with a right-click → Open. Going
-     * further needs a Developer ID Application certificate in the keychain and an Apple ID with an
-     * app-specific password for notarytool; nothing here has to change but `mac.identity` and a
-     * `notarize` block.
+     * together, and the only Macs this runs on are Apple Silicon.
+     *
+     * Signed or not is {@link macSigning}'s answer, read from the environment the build runs in.
      */
     mac: {
       icon: 'resources/icon.png',
@@ -92,8 +90,7 @@ export function packagingFor(platform: NodeJS.Platform) {
         { target: 'dmg', arch: ['arm64'] },
         { target: 'dir', arch: ['arm64'] },
       ],
-      // No Developer ID here, so signing is skipped and Electron's own ad-hoc signature stands.
-      identity: null,
+      ...macSigning(env),
       // macOS reads the menu bar and the app switcher from the bundle, never from `app.setName`.
       extendInfo: { CFBundleName: APP_NAME, CFBundleDisplayName: APP_NAME },
     },
@@ -187,6 +184,46 @@ export function packagingFor(platform: NodeJS.Platform) {
         'libsecret-1-0',
       ],
     },
+  }
+}
+
+/**
+ * How the Mac build is signed, which depends on whether the build was handed a Developer ID.
+ *
+ * **With one** — `CSC_KEYCHAIN` names an unlocked keychain holding the "Developer ID Application"
+ * certificate, which `.github/workflows/release.yml` imports from the repository's secrets
+ * (`docs/RELEASING.md`) — electron-builder signs every binary in the bundle from that keychain with
+ * the hardened runtime and a secure timestamp (`@electron/osx-sign` passes `--timestamp` unless
+ * told otherwise), and hands the `.app` to Apple's notary service with the App Store Connect API
+ * key in `APPLE_API_KEY`, `APPLE_API_KEY_ID` and `APPLE_API_ISSUER`, stapling the ticket on its
+ * return. The DMG around it is signed, notarised and stapled by the workflow, because
+ * electron-builder signs a DMG without a timestamp and notarises none.
+ *
+ * The workflow imports the certificate itself rather than handing electron-builder the `.p12` in
+ * `CSC_LINK`: electron-builder's own temporary keychain fails to unlock on current macOS runners
+ * (`set-key-partition-list` … `SecKeychainUnlock`), which is what the first signed run hit. The
+ * identity is named by its type and not its holder, so a fork with its own Developer ID needs no
+ * edit here.
+ *
+ * The hardened runtime is what notarisation requires, and it takes away the writable, executable
+ * memory V8 compiles into, so `resources/entitlements.mac.plist` grants that one thing back — to
+ * the app and, through `entitlementsInherit`, to the helpers that are the renderers. Nothing else
+ * is asked for, and library validation stays on: node-pty's `.node` and `spawn-helper` are signed
+ * with the same identity as the app that loads them.
+ *
+ * **Without one** — a fork, a local `pnpm package`, or a release before the secrets exist — nothing
+ * changes from decision 54: no identity, so signing is skipped even when the keychain holds a
+ * certificate, and the bundle keeps the ad-hoc signature the fuse flip re-applies. The boss opens it
+ * the first time with a right-click → Open.
+ */
+export function macSigning(env: NodeJS.ProcessEnv) {
+  if (!env['CSC_KEYCHAIN']) return { identity: null }
+  return {
+    identity: 'Developer ID Application',
+    hardenedRuntime: true,
+    entitlements: 'resources/entitlements.mac.plist',
+    entitlementsInherit: 'resources/entitlements.mac.plist',
+    notarize: true,
   }
 }
 

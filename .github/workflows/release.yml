@@ -3,6 +3,10 @@ name: Release
 # Push a tag like v0.1.0 and every OS builds its installers and attaches them to a draft release.
 # The tag must match package.json's version. Publishing the draft is what makes it an update: the
 # app only reads published releases (`src/shared/app/updates.ts`).
+#
+# The macOS build is signed with the Developer ID, notarised and stapled when the repository has
+# the five secrets `docs/RELEASING.md` describes, and unsigned — with a warning on the run — when it
+# has none, which is every fork and this repository until the owner adds them.
 on:
   push:
     tags: ['v*']
@@ -60,13 +64,112 @@ jobs:
           Add-MpPreference -ExclusionProcess "node.exe"
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
+      # All five or none: a fork has none and builds unsigned, while a repository with some of them
+      # is a mistake to stop on, not a release to ship unsigned. The certificate goes into a
+      # keychain of this job's own, and electron-builder signs from it through CSC_KEYCHAIN —
+      # never from CSC_LINK, because the temporary keychain electron-builder makes for a .p12 fails
+      # to unlock on current runners (`set-key-partition-list` … `SecKeychainUnlock`). `macSigning`
+      # in `src/build/packaging.ts` turns signing on when CSC_KEYCHAIN is set; the notary key goes
+      # to electron-builder as APPLE_API_KEY*. The DMG step below signs from the same keychain.
+      - name: Developer ID, if the repository has one
+        if: runner.os == 'macOS'
+        env:
+          P12_BASE64: ${{ secrets.DEVELOPER_ID_P12_BASE64 }}
+          P12_PASSWORD: ${{ secrets.DEVELOPER_ID_P12_PASSWORD }}
+          KEY_P8_BASE64: ${{ secrets.NOTARY_KEY_P8_BASE64 }}
+          KEY_ID: ${{ secrets.NOTARY_KEY_ID }}
+          ISSUER_ID: ${{ secrets.NOTARY_ISSUER_ID }}
+        run: |
+          present=0
+          for value in "$P12_BASE64" "$P12_PASSWORD" "$KEY_P8_BASE64" "$KEY_ID" "$ISSUER_ID"; do
+            [ -n "$value" ] && present=$((present + 1))
+          done
+          if [ "$present" -eq 0 ]; then
+            echo "::warning title=macOS build is unsigned::No Developer ID secrets, so the DMG is unsigned and not notarised; Gatekeeper will warn on first open. docs/RELEASING.md says how to add them."
+            echo "CSC_IDENTITY_AUTO_DISCOVERY=false" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          if [ "$present" -ne 5 ]; then
+            echo "::error title=Developer ID secrets incomplete::$present of the five signing secrets are set. Set all of DEVELOPER_ID_P12_BASE64, DEVELOPER_ID_P12_PASSWORD, NOTARY_KEY_P8_BASE64, NOTARY_KEY_ID and NOTARY_ISSUER_ID, or none."
+            exit 1
+          fi
+          p12="$RUNNER_TEMP/developer-id.p12"
+          p8="$RUNNER_TEMP/notary-key.p8"
+          echo "$P12_BASE64" | base64 --decode > "$p12"
+          echo "$KEY_P8_BASE64" | base64 --decode > "$p8"
+
+          keychain="$RUNNER_TEMP/signing.keychain-db"
+          keychain_password="$(openssl rand -hex 16)"
+          security create-keychain -p "$keychain_password" "$keychain"
+          security set-keychain-settings -lut 3600 "$keychain"
+          security unlock-keychain -p "$keychain_password" "$keychain"
+          security import "$p12" -k "$keychain" -P "$P12_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -k "$keychain_password" "$keychain" >/dev/null
+          # Each keychain already searched is one word; splitting them apart is the point.
+          # shellcheck disable=SC2046
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          rm -f "$p12"
+          security find-identity -v -p codesigning "$keychain" | grep -q 'Developer ID Application' \
+            || { echo "::error::The imported certificate is not a Developer ID Application identity"; exit 1; }
+
+          {
+            echo "MAC_SIGNED=true"
+            echo "SIGNING_KEYCHAIN=$keychain"
+            echo "CSC_KEYCHAIN=$keychain"
+            echo "CSC_IDENTITY_AUTO_DISCOVERY=true"
+            echo "APPLE_API_KEY=$p8"
+            echo "APPLE_API_KEY_ID=$KEY_ID"
+            echo "APPLE_API_ISSUER=$ISSUER_ID"
+          } >> "$GITHUB_ENV"
       - run: pnpm ${{ matrix.package }}
+      # electron-builder has signed the app with the hardened runtime, notarised it and stapled the
+      # ticket before it built the DMG. It signs no DMG with a timestamp and notarises none, so that
+      # is done here; then the DMG's blockmap is rebuilt, because stapling changed its bytes.
+      - name: Verify the app, then sign, notarise and staple the DMG
+        if: runner.os == 'macOS' && env.MAC_SIGNED == 'true'
+        run: |
+          app="release/mac-arm64/TinyCorp.app"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          signature=$(codesign --display --verbose=2 "$app" 2>&1)
+          echo "$signature"
+          echo "$signature" | grep -q '^Authority=Developer ID Application' || { echo "::error::Not signed with a Developer ID"; exit 1; }
+          echo "$signature" | grep -q '^Timestamp=' || { echo "::error::No secure timestamp"; exit 1; }
+          echo "$signature" | grep -q 'flags=.*runtime' || { echo "::error::No hardened runtime"; exit 1; }
+          xcrun stapler validate "$app"
+          spctl --assess --type execute --verbose=2 "$app"
+
+          for dmg in release/*.dmg; do
+            codesign --sign "Developer ID Application" --keychain "$SIGNING_KEYCHAIN" --timestamp "$dmg"
+            result=$(xcrun notarytool submit "$dmg" --key "$APPLE_API_KEY" --key-id "$APPLE_API_KEY_ID" \
+              --issuer "$APPLE_API_ISSUER" --wait --output-format json)
+            echo "$result"
+            if [ "$(echo "$result" | jq -r .status)" != "Accepted" ]; then
+              xcrun notarytool log "$(echo "$result" | jq -r .id)" --key "$APPLE_API_KEY" \
+                --key-id "$APPLE_API_KEY_ID" --issuer "$APPLE_API_ISSUER" || true
+              exit 1
+            fi
+            xcrun stapler staple "$dmg"
+            xcrun stapler validate "$dmg"
+            codesign --verify --strict --verbose=2 "$dmg"
+            spctl --assess --type open --context context:primary-signature --verbose=2 "$dmg"
+            node --input-type=module -e "
+              import { createRequire } from 'node:module'
+              const builder = createRequire(createRequire(import.meta.url).resolve('electron-builder'))
+              const { buildBlockMap } = builder('app-builder-lib/out/targets/blockmap/blockmap')
+              await buildBlockMap(process.argv[1], 'gzip', process.argv[1] + '.blockmap')
+            " "$dmg"
+          done
       - name: Start what came out
         if: runner.os != 'Linux'
         run: node tools/smoke-packaged.mjs
       - name: Start what came out
         if: runner.os == 'Linux'
         run: xvfb-run --auto-servernum node tools/smoke-packaged.mjs
+      - name: Remove the signing keychain and keys
+        if: always() && runner.os == 'macOS'
+        run: |
+          if [ -n "${SIGNING_KEYCHAIN:-}" ]; then security delete-keychain "$SIGNING_KEYCHAIN" || true; fi
+          rm -f "$RUNNER_TEMP/developer-id.p12" "$RUNNER_TEMP/notary-key.p8"
       - uses: actions/upload-artifact@v4
         with:
           name: installers-${{ matrix.os }}

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <!-- V8 compiles JavaScript to machine code at run time; the hardened runtime forbids writable
+         and executable memory unless this is granted. It is the one entitlement Electron needs.
+         Nothing else is granted: no camera, microphone or location, and library validation stays
+         on, because every native module in the bundle is signed with the same Developer ID.
+         `src/build/packaging.ts` says when it is used. -->
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+  </dict>
+</plist>

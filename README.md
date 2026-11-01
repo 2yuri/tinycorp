@@ -79,7 +79,7 @@ When a release exists, each platform gets:
 
 | Platform | What you download | Notes |
 | --- | --- | --- |
-| **macOS** | the `.dmg` | Apple Silicon. Unsigned, so the first open is right-click → **Open**, not a double-click. |
+| **macOS** | the `.dmg` | Apple Silicon. Signed with a Developer ID and notarised by Apple, so it opens with a double-click. A release built before the signing secrets existed says so, and is opened the first time with right-click → **Open** ([`docs/RELEASING.md`](docs/RELEASING.md)). |
 | **Windows** | `TinyCorp-Setup-<version>-x64.exe` | Windows 10 or later, x64. Installs for you alone and needs no administrator. SmartScreen warns once: **More info → Run anyway**. |
 | **Windows + WSL** | the same installer | The app itself runs on Windows; a Provider CLI installed **inside a distro** is a first-class place for it to run — see [`docs/windows.md`](docs/windows.md). |
 | **Linux** | `TinyCorp-<version>-x86_64.AppImage` or `TinyCorp-<version>-amd64.deb` | x86-64, Ubuntu 22.04 / Debian 12 / Fedora 39 or newer. The `.deb` declares its own dependencies and `apt` installs them; an AppImage cannot, so read [`docs/linux.md`](docs/linux.md) first. |
